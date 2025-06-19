@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>FFmpeg Runner</title>
+</head>
+<body>
+  <h1>Run FFmpeg Command</h1>
+  <input id="command" type="text" placeholder="Enter FFmpeg args, e.g. -i input.mp4 -vf scale=320:240 output.mp4" size="80">
+  <button onclick="runCommand()">Run</button>
+  <pre id="output"></pre>
+
+  <script>
+    async function runCommand() {
+      const cmd = document.getElementById('command').value;
+      const output = document.getElementById('output');
+      output.textContent = 'Running...\n';
+
+      const response = await fetch('/run-ffmpeg', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({args: cmd})
+      });
+
+      if (!response.ok) {
+        output.textContent += `Error: ${response.statusText}`;
+        return;
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      while(true) {
+        const {done, value} = await reader.read();
+        if(done) break;
+        output.textContent += decoder.decode(value);
+      }
+
+      output.textContent += '\nProcess finished.';
+    }
+  </script>
+</body>
+</html>
